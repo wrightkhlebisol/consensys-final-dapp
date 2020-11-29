@@ -6,9 +6,9 @@
 
 ## General Project Idea
 
-Picture a situation where somone has promised to do something for you at a particular time or a milestone reached, might be an entity as big as the government promising the electorate that they would do one thing or the other, and it might also be as little as your friend promising to buy you something when you successfully complete a task.
+Picture a situation where somone has promised to do something for you at a particular time or when you reach a milestone, might be an entity as big as the government promising the electorate that they would do one thing or the other if elected, and it might also be as little as your friend promising to buy you something when you successfully complete a task.
 
-People forget, intentionally or not, and that's your loss as most times there's nothing to reference or no one to enforce this promises.
+People forget, intentionally or not, and that's your loss as most times, there's nothing to reference or no one to enforce these promises.
 
 #### **🔥🥁 Enter Oath-Keeper 🔥🥁**
 
@@ -18,7 +18,17 @@ Oath-Keeper ensures that Oath-givers can stake their wealth of equivalent stake 
 
 Oath-keepers too are assured of a refund if a milestone isn't reached or when time lapses before a required milestone is reached.
 
-#### **POSSIBLE USE CASES**
+#### **USER TYPES**
+
+---
+
+1. OATH-GIVER (required): User who creates oath on the platform, staking his wealth or token against a promise or milestone
+
+2. OATH-TAKER (required): User who recieves staked tokens at the end of the oath life cycle.
+
+3. OATH-VERIFIER (optional): Optional third party User that checks and verifies that a required milestone condition has been met.
+
+#### **POSSIBLE USERS OR USE CASES**
 
 ---
 
