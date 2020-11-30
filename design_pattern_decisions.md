@@ -5,5 +5,5 @@
 ```
 
 ```
-2.
+2. Upgradable Design Pattern:
 ```
