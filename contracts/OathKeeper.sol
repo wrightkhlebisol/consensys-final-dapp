@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.4.0 <0.8.0;
+import "@openzeppelin/contracts/math/SafeMath.sol";
 
 /// @title OathKeeper contract
 /// @author Ogundiya O. Caleb
@@ -7,7 +8,14 @@ pragma solidity >=0.4.0 <0.8.0;
 /// @dev All function calls are currently implemented without side effects
 
 contract OathKeeper{
+
+    using SafeMath for uint256;
+
     uint private oathCount = 0;
+
+    bool public stopped = false;
+
+    address payable public owner;
 
     mapping (address => uint) public pendingWithdrawals;
 
@@ -31,8 +39,8 @@ contract OathKeeper{
     struct Milestone {
         // oathId acts as foreignkey to link milestone to oath
         string milestoneBody;
-        uint8 confirmations;
-        uint8 confirmationsSoFar;
+        uint confirmations;
+        uint confirmationsSoFar;
         uint milestoneValue;
         uint milestoneCreated;
         uint milestoneDeadline;
@@ -70,6 +78,25 @@ contract OathKeeper{
         _;
     }
 
+    modifier hasEnoughToCreateMilestone(address oathGiver, uint _milestoneValue){
+        require(oathGiver.balance >= _milestoneValue.add(tx.gasprice), "Your balance is insufficient for creating equivalent milestone");
+        _;
+    }
+
+    modifier onlyOwner(address _sender){
+        require(_sender == owner, "Unauthorised");
+        _;
+    }
+
+    modifier notEmergency {
+        require(!stopped, "Contract inactive");
+        _;
+    }
+
+    modifier emergency {
+        require(stopped, "Contract execution paused");
+        _;
+    }
 
 
     /**
@@ -90,6 +117,22 @@ contract OathKeeper{
     event recipientCredited(address recipient, uint amount);
 
 
+    /**
+     * METHODS
+     */
+
+    constructor() public{
+        owner = msg.sender;
+    }
+
+    function pauseContract() public onlyOwner(msg.sender){
+        stopped = true;
+    }
+
+    function startContract() public onlyOwner(msg.sender){
+        stopped = false;
+    }
+
     /// @notice create oath
     /// @param _deadline When oath expires
     /// @param _oathTaker (required) user who can mark milestone as done
@@ -104,14 +147,15 @@ contract OathKeeper{
         address payable _completionRecipient,
         string memory _body
     )
+    notEmergency()
     public returns (uint _oathId)
     {
-        _oathId = oathCount++;
+        _oathId = oathCount;
         Oath memory newoath = Oath(
             _oathId,
             _body,
             block.timestamp,
-            block.timestamp + _deadline,
+            block.timestamp.add(_deadline),
             0,
             msg.sender,
             _oathTaker,
@@ -120,6 +164,7 @@ contract OathKeeper{
             false
         );
         oaths[_oathId] = newoath;
+        oathCount = oathCount.add(1);
         emit oathCreated(_oathId);
     }
 
@@ -140,23 +185,21 @@ contract OathKeeper{
         uint _milestoneValue,
         uint _milestoneDeadline
     )
+    notEmergency()
     public payable
     oathExists(_oathId)
+    hasEnoughToCreateMilestone(msg.sender, _milestoneValue)
     onlyOathGiver(msg.sender, _oathId) returns (uint)
     {
+        _milestoneValue = _milestoneValue.mul(1);
+        owner.transfer(_milestoneValue);
         Milestone memory milestone = Milestone(
-            _milestoneBody,
-            _confirmations,
-            0,
-            _milestoneValue,
-            block.timestamp,
-            block.timestamp + _milestoneDeadline,
-            false,
-            false,
-            false
+            _milestoneBody, _confirmations, 0,
+            _milestoneValue, block.timestamp, block.timestamp.add(_milestoneDeadline),
+            false, false, false
         );
         milestones[_oathId].push(milestone);
-        oaths[_oathId].oathValue += _milestoneValue;
+        oaths[_oathId].oathValue = oaths[_oathId].oathValue.add(_milestoneValue);
         emit milestoneCreatedForOath(_oathId);
         return _oathId;
     }
@@ -167,18 +210,19 @@ contract OathKeeper{
     /// @return _oathId, _milestoneId
     function oathGiverMarkMilestoneAsDone(uint _oathId, uint _milestoneId)
     public
+    notEmergency()
     oathExists(_oathId)
     milestoneExists(_oathId, _milestoneId)
     onlyOathGiver(msg.sender, _oathId)
     returns (uint, uint)
     {
         // Milestone memory milestone = milestones[_oathId][_milestoneId];
-        milestones[_oathId][_milestoneId].confirmationsSoFar++;
+        milestones[_oathId][_milestoneId].confirmationsSoFar = milestones[_oathId][_milestoneId].confirmationsSoFar.add(1);
         milestones[_oathId][_milestoneId].oathGiverVerified = true;
         if(milestones[_oathId][_milestoneId].confirmationsSoFar == milestones[_oathId][_milestoneId].confirmations){
             // Give ether value to success recipient
             milestones[_oathId][_milestoneId].completed = true;
-            pendingWithdrawals[oaths[_oathId].completionRecipient] += milestones[_oathId][_milestoneId].milestoneValue;
+            pendingWithdrawals[oaths[_oathId].completionRecipient] = pendingWithdrawals[oaths[_oathId].completionRecipient].add(milestones[_oathId][_milestoneId].milestoneValue);
             emit confirmationsComplete(_milestoneId);
             emit recipientCredited(oaths[_oathId].completionRecipient, milestones[_oathId][_milestoneId].milestoneValue);
         }
@@ -192,18 +236,19 @@ contract OathKeeper{
     /// @return _oathId, _milestoneId
     function oathTakerMarkMilestoneAsDone(uint _oathId, uint _milestoneId)
         public
+        notEmergency()
         oathExists(_oathId)
         milestoneExists(_oathId, _milestoneId)
         onlyOathTaker(msg.sender, _oathId)
         returns (uint, uint)
     {
         Milestone storage milestone = milestones[_oathId][_milestoneId];
-        milestone.confirmationsSoFar++;
+        milestone.confirmationsSoFar = milestone.confirmationsSoFar.add(1);
         milestone.oathTakerVerified = true;
         if(milestone.confirmationsSoFar == milestone.confirmations){
             // Give ether value to success recipient
             milestone.completed = true;
-            pendingWithdrawals[oaths[_oathId].completionRecipient] += milestone.milestoneValue;
+            pendingWithdrawals[oaths[_oathId].completionRecipient] = pendingWithdrawals[oaths[_oathId].completionRecipient].add(milestone.milestoneValue);
             emit confirmationsComplete(_milestoneId);
             emit recipientCredited(oaths[_oathId].completionRecipient, milestone.milestoneValue);
         }
@@ -217,6 +262,7 @@ contract OathKeeper{
     function withdrawFunds()
         public
         senderHasPendingWithdrawals(msg.sender)
+        emergency()
         returns (uint)
     {
         uint amount = pendingWithdrawals[msg.sender];
@@ -228,9 +274,9 @@ contract OathKeeper{
     }
 
     /// @notice Fallback function
-    fallback() external payable{
-        return;
-    }
+    fallback() external payable{}
+
+    receive() external payable{}
 
     // function oathVerifierMarkMilestoneAsDone(uint _oathId) public returns (uint) {
     //     milestones[_oathId].confirmations++;

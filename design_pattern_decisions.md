@@ -5,5 +5,9 @@
 ```
 
 ```
+3. Circuit Breaker Design Pattern: This was used to pause contract execution in the case of a failure while still making it possible for withdrawals to be made, this allows the admin to control contract flow for more protection.
+```
+
+```
 2. Upgradable Design Pattern:
 ```

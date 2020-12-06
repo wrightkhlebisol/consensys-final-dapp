@@ -5,12 +5,16 @@
                 <h1 style="margin: 0">Oath-Keepr</h1>
                 <p style="margin: 0">...because action speaks louder than voice</p>
             </div>
-            <h3 class="address header-members">{{address}}</h3>
+            <div class="header-members">
+                <h3>{{address}}</h3>
+                <button v-show="!connected" @click="requestAccountAccess">Connect Account</button>
+            </div>
         </header>
         <section>
             <div>
                 <div class="body-title">
-                    <h1>All Oaths</h1>
+                    <h1>All Oaths : {{oathCount}}</h1>
+                    <p>Contract State: {{contractState ? "Active" : "Inactive"}}</p>
                 </div>
 
                 <div class="body-title">
@@ -19,26 +23,26 @@
 
                 <div>
                     <!-- Create New Oath -->
-                    <form class="newRecords" v-show="toggleCreateOath">
+                    <form class="newRecords" v-show="toggleCreateOath" @submit.prevent="createOath">
                         <h2>New Oath</h2>
                         <div>
-                            <input type="text" name="oath-title" placeholder="Oath Title" id="oath-title">
+                            <input type="text" placeholder="Oath Title" v-model="oathTitle">
                         </div>
                         <br>
                         <div>
-                            <input type="text" name="oath-title" placeholder="Oath Deadline" id="oath-title">
+                            <input type="text" placeholder="Oath Deadline" v-model="oathDeadline">
                         </div>
                         <br>
                         <div>
-                            <input type="text" name="oath-title" placeholder="Required no of Confirmations" id="oath-title">
+                            <input type="text" placeholder="Recipient on Default" v-model="oathDefaultRecipient">
                         </div>
                         <br>
                         <div>
-                            <input type="text" name="oath-title" placeholder="Recipient on Default" id="oath-title">
+                            <input type="text" placeholder="Recipient on Completion" v-model="oathCompletionRecipient">
                         </div>
                         <br>
                         <div>
-                            <input type="text" name="oath-title" placeholder="Recipient on Completion" id="oath-title">
+                            <button @click.prevent="createOath">Submit</button>
                         </div>
                     </form>
 
@@ -46,29 +50,33 @@
                     <form class="newRecords"  v-show="toggleCreateMilestone">
                         <h2>New Milestone</h2>
                         <div>
-                            <input type="text" name="oath-title" placeholder="Oath Id" id="oath-id" disabled>
+                            <input type="hidden" v-model="milestoneOathId" placeholder="Oath Id" disabled>
                         </div>
                         <br>
                         <div>
-                            <input type="text" name="oath-title" placeholder="Milestone Body" id="oath-title">
+                            <input type="text" placeholder="Milestone Body" v-model="milestoneBody">
                         </div>
                         <br>
                         <div>
-                            <input type="text" name="oath-title" placeholder="Milestone Deadline" id="oath-title">
+                            <input type="text" placeholder="Milestone Deadline" v-model="milestoneDeadline">
                         </div>
                         <br>
                         <div>
-                            <input type="text" name="oath-title" placeholder="Milestone Value" id="oath-title">
+                            <input type="text" placeholder="Milestone Value" v-model="milestoneValue">
+                        </div>
+                        <br>
+                        <div>
+                            <button>Submit</button>
                         </div>
                     </form>
                 </div>
             </div>
 
-            <div class="oath" v-for="oath in oaths" :key="oath.oathId">
+            <div class="oath" v-for="oath in oaths" :key="oath.Id">
                 <div class="oath-body">
                     <div class="oath-meta">
                         <span>
-                            Oath Id: {{oath.oathId}}
+                            Oath Id: {{oath.Id}}
                         </span>
                         <span class="oath-value">
                             Cummulative Oath Value: {{oath.oathValue}} eth
@@ -77,10 +85,10 @@
 
                     <div class="oath-title">
                         <h3>
-                            Oath-giver promises Oath-taker to do
+                            {{oath.oathGiver}} promises {{oath.oathTaker}} to do {{oath.body}} in
                         <span class="toggleMilestone" @click="toggleMilestoneMethod">
                             {{milestones.length}}
-                        </span> things before {{oath.oathDeadline}} days
+                        </span> milestones before {{oath.deadline}} days
                         </h3>
                     </div>
 
@@ -89,12 +97,12 @@
                             Milestones Completed: {{oath.milestonesCompleted}}
                         </span>
                         <span class="oath-created">
-                            Created: {{new Date().toUTCString()}}
+                            Created: {{oath.timeCreated}}
                         </span>
                     </div>
 
                     <div class="oath-deadline">
-                        Deadline: {{oath.oathDeadline}} days
+                        Deadline: {{oath.deadline}} days
                     </div>
                 <div class="body-title">
                     <button style="text-align: right" @click="toggleCreateMilestoneMethod"> Add Milestone + </button>
@@ -124,7 +132,7 @@
                         <tbody v-for="milestone in milestones" :key="milestone.id">
                             <tr>
                                 <td>
-                                    <input type="checkbox" name="complete" id="complete">
+                                    <input type="checkbox"  id="complete">
                                 </td>
                                 <td>
                                     <span>{{milestone.body}}</span>
@@ -148,15 +156,20 @@
 </template>
 
 <script>
-    import HelloWorld from './components/HelloWorld.vue'
+    import HelloWorld from './components/HelloWorld.vue';
     import Web3 from 'web3';
+    let web3 = new Web3(Web3.givenProvider || 'http://localhost:7545');
+    import {abi} from '../build/contracts/OathKeeper.json';
+    const contract_address = '0x3c0aFC2f560f95b5E69F0070E2474ccE4d05CbAd';
 
-    // let web3 = new Web3(Web3.givenProvider || new Web3.providers.HttpProvider("http://localhost:8545"));
+    let contract = new web3.eth.Contract(abi, contract_address);
 
-    // let accounts = web3.eth.getAccounts().then((res) => {
-    //     console.log(res);
-    // }).catch(err => console.log(err))
 
+    ethereum.on('accountsChanged', function (accounts) {
+        // Time to reload your interface with accounts[0]!
+        this.address = accounts[0];
+        console.log({accounts, abi}, this.address)
+    });
 
     export default {
     name: 'App',
@@ -169,21 +182,27 @@
             toggleMilestones: true,
             toggleCreateOath: false,
             toggleCreateMilestone: false,
-            oaths: [{
-                oathId: 1441,
-                oathValue: 86,
-                milestonesCompleted: 3,
-                requiredConfirmations: 3,
-                oathDeadline: 37,
-                created: "23-10-2020"
-            },{
-                oathId: 1442,
-                oathValue: 86,
-                milestonesCompleted: 3,
-                requiredConfirmations: 3,
-                oathDeadline: 37,
-                created: "23-10-2020"
-            }],
+            connected: false,
+            oathCount: 0,
+            contractState: true,
+
+            oathTitle: '',
+            oathDeadline: '',
+            oathDefaultRecipient: '',
+            oathCompletionRecipient: '',
+
+            oathId: '',
+            timeCreated: '',
+            oathValue: '',
+            oathGiver: '',
+            useVerifiers: '',
+
+            milestoneOathId: '',
+            milestoneBody: '',
+            milestoneDeadline: '',
+            milestoneValue: '',
+
+            oaths: [],
             milestones: [{
                 confirmed: false,
                 body: "Milestone body 1",
@@ -231,18 +250,61 @@
         },
         toggleCreateMilestoneMethod(){
             this.toggleCreateMilestone = !this.toggleCreateMilestone;
-        }
+        },
+        async requestAccountAccess(){
+            if (typeof window.ethereum !== 'undefined') {
+                try {
+                    const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
+                    this.address = accounts[0];
+                    this.connected = true;
+                } catch (error) {
+                    if(error.code = 4001){
+                        this.address = "Oath-keepr needs an account to sign requests with";
+                    }
+                }
+            }else{
+                console.log("Oath Keeper app cannot work without a provider");
+                this.address = "Oath Keeper app cannot work without a provider, kindly install Metamask"
+            }
+        },
+        async toggleContractState(){
+            console.log(await contract.methods.stopped().call());
+        },
+        async createOath(){
+            await contract.methods.createOath(
+                this.oathDeadline,
+                this.address,
+                this.oathDefaultRecipient,
+                this.oathCompletionRecipient,
+                this.oathTitle
+            ).send({from: this.address})
+        },
+        async getOathCount(){
+            this.oathCount = await contract.methods.getOathCount().call();
+        },
+        async addMilestoneToOath(){},
+        async giverMarkAsDone(){},
+        async takerMarkAsDone(){},
+        async withdrawFunds(){},
+        async getMilestones(){},
+        async getOath(_index){
+            return await contract.methods.oaths(_index).call();
+        },
+        async checkState(){}
     },
+    watchers: {},
     async mounted(){
-        if (typeof window.ethereum !== 'undefined') {
-            const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
-            this.address = accounts[0];
-        }else{
-            console.log("Oath Keeper app cannot work without a provider");
-            this.address = "Oath Keeper app cannot work without a provider"
+        // await web3.eth.getAccounts(console.log);
+        console.log(await this.getOathCount());
+        for (let i = 0; i < this.oathCount; i++) {
+            this.oaths.push(await this.getOath(i));
+            if(i === 0) console.log(await this.getOath(i));
         }
+
+        this.contractState = contract.methods.stopped().call();
+
     }
-    }
+}
 </script>
 
 <style>
@@ -283,22 +345,13 @@
     color: #2c3e50;
     }
 
-    .newRecords{
+    .newRecords, .header-members{
         width: 50%;
         display: inline-block;
     }
 
     .toggleMilestone{
         cursor: pointer;
-    }
-
-    .header-members, .body-title{
-        width: 50%;
-        display: inline-block;
-    }
-
-    .address {
-        float: right;
     }
 
     .oath{
