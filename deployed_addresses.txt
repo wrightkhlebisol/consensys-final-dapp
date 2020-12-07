@@ -1,1 +1,2 @@
-contract address:
+contract-address: 0xc1FdBdc33A5FdFAD93bfe96eE9927531c5AE95cF
+testnet: rinkeby
