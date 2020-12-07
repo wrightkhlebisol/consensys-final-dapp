@@ -48,16 +48,32 @@ Oath-keepers too are assured of a refund if a milestone isn't reached or when ti
 
 ---
 
-`1. cd into the dapp directory and execute the following script`
+`1. Clone the repo`
 
 ```
-npm install
-```
-
-`2. then`
 
 ```
-npm run serve
+
+`2. cd into the project directory`
+
 ```
 
-`this should start a development server at localhost:8081`
+```
+
+`3. Execute the following script`
+
+```
+
+```
+
+`4. npm install`
+
+```
+
+```
+
+`5. npm run serve`
+
+```
+This should start a development server at localhost:8081 or 8080 if that is available
+```
