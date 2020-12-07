@@ -79,7 +79,7 @@ contract OathKeeper{
     }
 
     modifier hasEnoughToCreateMilestone(address oathGiver, uint _milestoneValue){
-        require(oathGiver.balance >= _milestoneValue.add(tx.gasprice), "Your balance is insufficient for creating equivalent milestone");
+        require(oathGiver.balance >= _milestoneValue, "Your balance is insufficient for creating equivalent milestone");
         _;
     }
 
@@ -121,7 +121,7 @@ contract OathKeeper{
      * METHODS
      */
 
-    constructor() public{
+    constructor() payable public{
         owner = msg.sender;
     }
 
@@ -182,24 +182,22 @@ contract OathKeeper{
         uint _oathId,
         string memory _milestoneBody,
         uint8 _confirmations,
-        uint _milestoneValue,
         uint _milestoneDeadline
     )
     notEmergency()
     public payable
     oathExists(_oathId)
-    hasEnoughToCreateMilestone(msg.sender, _milestoneValue)
+    hasEnoughToCreateMilestone(msg.sender, msg.value)
     onlyOathGiver(msg.sender, _oathId) returns (uint)
     {
-        _milestoneValue = _milestoneValue.mul(1);
-        owner.transfer(_milestoneValue);
+        owner.transfer(msg.value);
         Milestone memory milestone = Milestone(
             _milestoneBody, _confirmations, 0,
-            _milestoneValue, block.timestamp, block.timestamp.add(_milestoneDeadline),
+            msg.value, block.timestamp, block.timestamp.add(_milestoneDeadline),
             false, false, false
         );
         milestones[_oathId].push(milestone);
-        oaths[_oathId].oathValue = oaths[_oathId].oathValue.add(_milestoneValue);
+        oaths[_oathId].oathValue = oaths[_oathId].oathValue.add(msg.value);
         emit milestoneCreatedForOath(_oathId);
         return _oathId;
     }
@@ -276,6 +274,7 @@ contract OathKeeper{
     /// @notice Fallback function
     fallback() external payable{}
 
+    /// @notice Fallback function
     receive() external payable{}
 
     // function oathVerifierMarkMilestoneAsDone(uint _oathId) public returns (uint) {
