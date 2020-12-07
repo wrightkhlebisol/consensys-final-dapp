@@ -11,6 +11,9 @@
             </div>
         </header>
         <section>
+        <div class="notice">
+                {{notice}}
+            </div>
             <div>
                 <div class="body-title">
                     <h1>All Oaths : {{oathCount}}</h1>
@@ -23,14 +26,14 @@
 
                 <div>
                     <!-- Create New Oath -->
-                    <form class="newRecords" v-show="toggleCreateOath" @submit.prevent="createOath">
+                    <form class="milestoneMaker" v-show="toggleCreateOath" @submit.prevent="createOath">
                         <h2>New Oath</h2>
                         <div>
                             <input type="text" placeholder="Oath Title" v-model="oathTitle">
                         </div>
                         <br>
                         <div>
-                            <input type="text" placeholder="Oath Deadline" v-model="oathDeadline">
+                            <input type="datetime-local" placeholder="Oath Deadline" v-model="oathDeadline">
                         </div>
                         <br>
                         <div>
@@ -46,27 +49,6 @@
                         </div>
                     </form>
 
-                    <!-- Add milestone to oath -->
-                    <form class="newRecords" @submit.prevent="addMilestoneToOath" v-show="toggleCreateMilestone">
-                        <h2>New Milestone</h2>
-                        <div>
-                            <input type="text" v-model="milestoneOathId" placeholder="Oath Id" disabled>
-                        </div>
-                        <br>
-                        <div>
-                            <input type="text" placeholder="Body" v-model="milestoneBody">
-                        </div>
-                        <br>
-                        <div>
-                            <input type="number" placeholder="Minimum Confirmations" v-model="milestoneConfirmations">
-                            <input type="number" placeholder="Deadline" v-model="milestoneDeadline">
-                        </div>
-                        <br>
-                        <div>
-                            <input type="number" placeholder="Ether Value" v-model="milestoneValue">
-                            <button @click.prevent="addMilestoneToOath">Submit</button>
-                        </div>
-                    </form>
                 </div>
             </div>
 
@@ -84,68 +66,29 @@
                     <div class="oath-title">
                         <h3>
                             {{oath.oathGiver}} promises {{oath.oathTaker}} to {{oath.body}} in
-                        <span class="toggleMilestone" @click="toggleMilestoneMethod(oath.Id)">
-                            {{milestones.length}}
-                        </span> milestones before {{oath.deadline}} days
+                        <span class="toggleMilestone" @click="toggleMilestoneMethod(oath.Id, oath.milestoneCount)">
+                            {{oath.milestoneCount}}
+                        </span> milestones before {{new Date(oath.deadline * 1000).toUTCString()}}
                         </h3>
                     </div>
 
                     <div class="oath-meta-2">
                         <span>
-                            Milestones Completed: {{oath.milestonesCompleted}}
+                            Milestones Completed: {{oath.milestonesCompleted}}/{{oath.milestoneCount}}
                         </span>
                         <span class="oath-created">
-                            Created: {{oath.timeCreated}}
+                            Created: {{new Date(oath.timeCreated * 1000).toUTCString()}}
                         </span>
                     </div>
 
                     <div class="oath-deadline">
-                        Deadline: {{oath.deadline}} days
+                        Deadline: {{new Date(oath.deadline * 1000).toUTCString()}}
                     </div>
                 </div>
-
                 <hr>
-                <div class="oath-milestones">
-                    <div>
-                        <span>
-                            Milestone(s) {{milestones.length}}
-                            <button style="text-align: right" @click="toggleCreateMilestoneMethod(oath.Id)"> Add Milestone + </button>
-                        </span>
-
-                        <span class="toggleMilestone" style="float: right" @click="toggleMilestoneMethod">
-                            toggle
-                        </span>
-                    </div>
-                    <hr>
-                    <table class="milestone-table" v-show="toggleMilestones">
-                        <thead>
-                            <th>Complete</th>
-                            <th>Body</th>
-                            <th>Deadline</th>
-                            <th>Value</th>
-                            <th>Confirmations</th>
-                        </thead>
-                        <tbody v-for="milestone in milestones" :key="milestone.id">
-                            <tr>
-                                <td>
-                                    <input type="checkbox"  id="complete">
-                                </td>
-                                <td>
-                                    <span>{{milestone.body}}</span>
-                                </td>
-                                <td>
-                                    <span>{{milestone.milestoneDeadline}} days</span>
-                                </td>
-                                <td>
-                                    <span>{{milestone.milestoneValue}} eth</span>
-                                </td>
-                                <td>
-                                    <span>{{milestone.confirmations}}</span>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
+                <Milestone :oath-milestone-count="oath.milestoneCount"
+                    :oath-id="oath.Id" :oath-giver="oath.oathGiver"
+                    :oath-taker="oath.oathTaker" :contract="contract" :address="address" :web3="web3"></Milestone>
             </div>
         </section>
     </div>
@@ -155,7 +98,8 @@
     import Web3 from 'web3';
     let web3 = new Web3(Web3.givenProvider || 'http://localhost:7545');
     import {abi} from '../build/contracts/OathKeeper.json';
-    const contract_address = '0x8FC4bb30A482597A408F5f9F2E065ae0a85a6Af6';
+    import Milestone from './components/Milestone.vue';
+    const contract_address = '0xA40ABb97B5b51F437212EA862554f646d1Ce638c';
 
     let contract = new web3.eth.Contract(abi, contract_address);
 
@@ -169,16 +113,18 @@
     export default {
     name: 'App',
     components: {
+        Milestone
     },
     data(){
         return {
             address: "",
-            toggleMilestones: true,
+            toggleMilestones: false,
             toggleCreateOath: false,
-            toggleCreateMilestone: false,
             connected: false,
             oathCount: 0,
             contractState: true,
+            contract,
+            web3,
 
             oathTitle: '',
             oathDeadline: '',
@@ -191,61 +137,18 @@
             oathGiver: '',
             useVerifiers: '',
 
-            milestoneOathId: '',
-            milestoneBody: '',
-            milestoneConfirmations: '',
-            milestoneDeadline: '',
-            milestoneValue: '',
-
-            oaths: [],
-            milestones: [{
-                confirmed: false,
-                body: "Milestone body 1",
-                milestoneDeadline: 25,
-                milestoneValue: 17,
-                confirmations: 3
-
-            }, {
-                confirmed: true,
-                body: "Milestone body 2",
-                milestoneDeadline: 29,
-                milestoneValue: 45,
-                confirmations: 2
-
-            }, {
-                confirmed: false,
-                body: "Milestone body 3",
-                milestoneDeadline: 34,
-                milestoneValue: 34,
-                confirmations: 1
-
-            },{
-                confirmed: true,
-                body: "Milestone body 2",
-                milestoneDeadline: 29,
-                milestoneValue: 45,
-                confirmations: 0
-
-            }, {
-                confirmed: false,
-                body: "Milestone body 3",
-                milestoneDeadline: 34,
-                milestoneValue: 34,
-                confirmations: 0
-
-            }],
+            oaths: []
         }
     },
     methods: {
-        toggleMilestoneMethod(){
+        async toggleMilestoneMethod(_oathId, _totalMilestones){
             this.toggleMilestones = !this.toggleMilestones;
+            if(this.toggleMilestones == true){
+                return await this.getMilestones(_oathId, _totalMilestones);
+            }
         },
         toggleCreateOathMethod(){
             this.toggleCreateOath = !this.toggleCreateOath;
-        },
-        toggleCreateMilestoneMethod(_oathId){
-            this.milestoneOathId = _oathId;
-            this.toggleCreateMilestone = !this.toggleCreateMilestone;
         },
         async requestAccountAccess(){
             if (typeof window.ethereum !== 'undefined') {
@@ -267,8 +170,11 @@
             console.log(await contract.methods.stopped().call());
         },
         async createOath(){
+            let date = new Date(this.oathDeadline).getTime();
+            let deadline = date / 1000;
+
             await contract.methods.createOath(
-                this.oathDeadline,
+                deadline,
                 this.address,
                 this.oathDefaultRecipient,
                 this.oathCompletionRecipient,
@@ -278,24 +184,23 @@
         async getOathCount(){
             this.oathCount = await contract.methods.getOathCount().call();
         },
-        async addMilestoneToOath(){
-            await contract.methods.addMilestoneToOath(
-                this.milestoneOathId,
-                this.milestoneBody,
-                this.milestoneConfirmations,
-                this.milestoneDeadline,
-            ).send({from: this.address, value: web3.utils.toWei(this.milestoneValue, "ether")});
+        async withdrawFunds(){
+            await contract.methods.withdrawFunds().send();
         },
-        async giverMarkAsDone(){},
-        async takerMarkAsDone(){},
-        async withdrawFunds(){},
-        async getMilestones(_oathId){
-            return await contract.methods.oaths(_oathId).call();
+        async getMilestones(_oathId, _totalMilestones){
+            console.log(_oathId, _totalMilestones);
+            for (let i = 0; i < _totalMilestones; i++) {
+                // console.log(await contract.methods.milestones(_oathId, i).call());
+                if(this.milestones.length < _totalMilestones){
+                    this.milestones.push(await contract.methods.milestones(_oathId, i).call());
+                }
+            }
         },
         async getOath(_index){
             return await contract.methods.oaths(_index).call();
         },
-        async checkState(){}
+        async checkState(){
+            await contract.methods.state().call();}
     },
     watchers: {},
     async mounted(){
@@ -303,7 +208,7 @@
         await this.getOathCount();
         for (let i = 0; i < this.oathCount; i++) {
             this.oaths.push(await this.getOath(i));
-            if(i === 0) console.log(await this.getOath(i));
+            // if(i === 0) console.log(await this.getOath(i));
         }
 
         this.contractState = contract.methods.stopped().call();
@@ -328,6 +233,14 @@
         box-shadow: 9px 11px 20px 5px rgba(0,0,0,.2);
         padding: 18px;
         width: 100%;
+    }
+
+.milestoneMaker{
+        width: 89%;
+        text-align: center;
+        border: 2px dashed black;
+        margin: 20px 0;
+        padding: 40px;
     }
 
     section{

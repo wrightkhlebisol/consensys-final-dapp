@@ -32,6 +32,7 @@ contract OathKeeper{
         address payable defaultsRecipient;
         address payable completionRecipient;
         bool useVerifiers;
+        uint milestoneCount;
     }
 
     mapping(uint => Milestone[]) public milestones;
@@ -161,7 +162,8 @@ contract OathKeeper{
             _oathTaker,
             _defaultsRecipient,
             _completionRecipient,
-            false
+            false,
+            0
         );
         oaths[_oathId] = newoath;
         oathCount = oathCount.add(1);
@@ -198,6 +200,8 @@ contract OathKeeper{
         );
         milestones[_oathId].push(milestone);
         oaths[_oathId].oathValue = oaths[_oathId].oathValue.add(msg.value);
+        oaths[_oathId].milestoneCount = oaths[_oathId].milestoneCount.add(1);
+
         emit milestoneCreatedForOath(_oathId);
         return _oathId;
     }
