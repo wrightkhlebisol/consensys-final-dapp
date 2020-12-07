@@ -11,17 +11,19 @@
             </div>
         </header>
         <section>
-        <div class="notice">
+            <div class="notice">
                 {{notice}}
             </div>
             <div>
                 <div class="body-title">
                     <h1>All Oaths : {{oathCount}}</h1>
-                    <p>Contract State: {{contractState ? "Active" : "Inactive"}}</p>
+                    <p>Contract State: {{contractState ? "Active" : "Disabled"}}</p>
                 </div>
 
                 <div class="body-title">
                     <button style="text-align: right" @click="toggleCreateOathMethod"> Create Oath + </button>
+                    <button style="text-align: right" @click="withdrawFunds"> Withdraw</button>
+                    <button style="text-align: right" @click="toggleState"> Toggle State </button>
                 </div>
 
                 <div>
@@ -107,6 +109,7 @@
     ethereum.on('accountsChanged', function (accounts) {
         // Time to reload your interface with accounts[0]!
         this.address = accounts[0];
+        // vm.$forceUpdate();
         // window.location.reload();
     });
 
@@ -125,6 +128,7 @@
             contractState: true,
             contract,
             web3,
+            notice: '',
 
             oathTitle: '',
             oathDeadline: '',
@@ -166,9 +170,6 @@
                 this.address = "Oath Keeper app cannot work without a provider, kindly install Metamask"
             }
         },
-        async toggleContractState(){
-            console.log(await contract.methods.stopped().call());
-        },
         async createOath(){
             let date = new Date(this.oathDeadline).getTime();
             let deadline = date / 1000;
@@ -185,7 +186,7 @@
             this.oathCount = await contract.methods.getOathCount().call();
         },
         async withdrawFunds(){
-            await contract.methods.withdrawFunds().send();
+            await contract.methods.withdrawFunds().send({from: this.address});
         },
         async getMilestones(_oathId, _totalMilestones){
             console.log(_oathId, _totalMilestones);
@@ -200,10 +201,34 @@
             return await contract.methods.oaths(_index).call();
         },
         async checkState(){
-            await contract.methods.state().call();}
+            await contract.methods.state().call();
+        },
+        async toggleState(){
+            if(this.contractState === true){
+                await contract.methods.pauseContract().send({from: this.address});
+                this.contractState = false;
+            }else{
+                await contract.methods.startContract().send({from: this.address});
+                this.contractState = true;
+            }
+        }
     },
     watchers: {},
     async mounted(){
+        if (typeof window.ethereum !== 'undefined') {
+            try {
+                const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
+                this.address = accounts[0];
+                this.connected = true;
+            } catch (error) {
+                if(error.code = 4001){
+                    this.address = "Oath-keepr needs an account to sign requests with";
+                }
+            }
+        }else{
+            console.log("Oath Keeper app cannot work without a provider");
+            this.address = "Oath Keeper app cannot work without a provider, kindly install Metamask"
+        }
         // await web3.eth.getAccounts(console.log);
         await this.getOathCount();
         for (let i = 0; i < this.oathCount; i++) {
@@ -211,7 +236,8 @@
             // if(i === 0) console.log(await this.getOath(i));
         }
 
-        this.contractState = contract.methods.stopped().call();
+        this.contractState = await contract.methods.stopped().call();
+        console.log(this.contractState);
 
         console.log({abi}, this.address)
 
@@ -300,5 +326,16 @@
     .oath-deadline,
     .oath-title{
         padding: 3px 0;
+    }
+
+    .notice{
+        background-color: hsla(180,52%,52%,1);
+        color: rgb(204, 35, 35);
+        padding: 10px;
+        margin-top: 44px;
+        font-weight: bold;
+        border: 3px solid gainsboro;
+        border-radius: 5px;
+        text-align: center;
     }
 </style>

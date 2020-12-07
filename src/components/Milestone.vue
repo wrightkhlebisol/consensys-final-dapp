@@ -52,7 +52,7 @@
                         <input type="checkbox" id="complete" @click="toggleComplete(oathId, index, oathGiver, oathTaker)" v-model="milestone.completed" true-value="true" false-value="false">
                     </td>
                     <td>
-                        <span>{{milestone.milestoneBody}} {{index}}</span>
+                        <span>{{milestone.milestoneBody}}</span>
                     </td>
                     <td>
                         <span>{{new Date(milestone.milestoneDeadline * 1000).toUTCString()}}</span>
