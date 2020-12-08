@@ -67,7 +67,7 @@
 
                     <div class="oath-title">
                         <h3>
-                            {{oath.oathGiver}} promises {{oath.oathTaker}} to {{oath.body}} in
+                            {{oath.defaultsRecipient}} promises {{oath.completionRecipient}} to {{oath.body}} in
                         <span class="toggleMilestone" @click="toggleMilestoneMethod(oath.Id, oath.milestoneCount)">
                             {{oath.milestoneCount}}
                         </span> milestones before {{new Date(oath.deadline * 1000).toUTCString()}}
@@ -101,7 +101,7 @@
     let web3 = new Web3(Web3.givenProvider || 'http://localhost:7545');
     import {abi} from '../build/contracts/OathKeeper.json';
     import Milestone from './components/Milestone.vue';
-    const contract_address = '0xA40ABb97B5b51F437212EA862554f646d1Ce638c';
+    const contract_address = '0xc1FdBdc33A5FdFAD93bfe96eE9927531c5AE95cF';
 
     let contract = new web3.eth.Contract(abi, contract_address);
 

@@ -77,3 +77,39 @@ Oath-keepers too are assured of a refund if a milestone isn't reached or when ti
 ```
 This should start a development server at localhost:8081 or 8080 if that is available
 ```
+
+---
+
+## **⚙️⚙️ USING THE DAPP ⚙️⚙️**
+
+---
+
+`1. Connect your metamask account to the dapp`
+
+```
+
+```
+
+`2. Click on create oath`
+
+```
+
+```
+
+`3. Complete the form and submit`
+
+```
+
+```
+
+`4. Wait for the transaction confirmation notification from metamask`
+
+```
+
+```
+
+`5. Reload the Dapp`
+
+```
+
+```
