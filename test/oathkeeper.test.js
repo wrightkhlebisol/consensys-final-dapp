@@ -45,16 +45,18 @@ contract("OathKeeper", function (accounts) {
 
     it("should add milestone to oath", async () => {
         const tx = await oathKeeperInstance.createOath(deadline, alice, owner, alice, body, { from: owner })
-        const mileStoneTX = await oathKeeperInstance.addMilestoneToOath(oathId, milestoneBody, confirmations, milestoneDeadline, { from: owner })
+        const mileStoneTX = await oathKeeperInstance.addMilestoneToOath(oathId, milestoneBody, confirmations, milestoneDeadline, { from: owner, value: 1 })
 
         const result = await oathKeeperInstance.milestones.call(0, 0);
 
         assert.equal(result[0], milestoneBody, 'Milestone body should equal to entered value')
-        assert.equal(result[6], false, 'Oath giver verified should be false on milestone creation')
-        assert.equal(result[7], false, 'Oath taker verified should be false on milestone creation')
-        assert.equal(result[8], false, 'Milestone completion started should be false')
+        assert.equal(result[6], false, 'Oath giver verified status should be false on milestone creation')
+        assert.equal(result[7], false, 'Oath taker verified status should be false on milestone creation')
+        assert.equal(result[8], false, 'Milestone completion status started should be false on milestone creation')
+    })
 
-
+    it("should error when trying to add milestone to non-existent oath", async () => {
+        await catchRevert(oathKeeperInstance.addMilestoneToOath(oathId, milestoneBody, confirmations, milestoneDeadline, { from: owner, value: 1 }))
     })
 
     it("should emit milestone created for oath event", async () => {
@@ -70,21 +72,19 @@ contract("OathKeeper", function (accounts) {
     })
 
     it("should let oath giver mark milestone as done", async () => {
-        const tx = await oathKeeperInstance.addMilestoneToOath()
 
     })
 
-
     it("should let oath taker mark milestone as done", async () => {
-        const tx = await oathKeeperInstance.addMilestoneToOath()
 
     })
 
     it("should emit oath giver mark milestone as done event", async () => {
         let eventEmitted = false
-        const tx = await oathKeeperInstance.addItem(name, price, { from: alice })
+        const tx = await oathKeeperInstance.createOath(deadline, alice, owner, alice, body, { from: owner })
+        const mileStoneTX = await oathKeeperInstance.addMilestoneToOath(oathId, milestoneBody, confirmations, milestoneDeadline, { from: owner })
 
-        if (tx.logs[0].event = "oathCreated") {
+        if (mileStoneTX.logs[0].event = "milestoneCreatedForOath") {
             eventEmitted = true;
         }
 
@@ -93,9 +93,10 @@ contract("OathKeeper", function (accounts) {
 
     it("should emit oath taker mark milestone as done event", async () => {
         let eventEmitted = false
-        const tx = await oathKeeperInstance.addItem(name, price, { from: alice })
+        const tx = await oathKeeperInstance.createOath(deadline, alice, owner, alice, body, { from: owner })
+        const mileStoneTX = await oathKeeperInstance.addMilestoneToOath(oathId, milestoneBody, confirmations, milestoneDeadline, { from: owner })
 
-        if (tx.logs[0].event = "oathCreated") {
+        if (mileStoneTX.logs[0].event = "milestoneCreatedForOath") {
             eventEmitted = true;
         }
 
@@ -104,9 +105,10 @@ contract("OathKeeper", function (accounts) {
 
     it("should emit withdrawal made event", async () => {
         let eventEmitted = false
-        const tx = await oathKeeperInstance.addItem(name, price, { from: alice })
+        const tx = await oathKeeperInstance.createOath(deadline, alice, owner, alice, body, { from: owner })
+        const mileStoneTX = await oathKeeperInstance.addMilestoneToOath(oathId, milestoneBody, confirmations, milestoneDeadline, { from: owner })
 
-        if (tx.logs[0].event = "oathCreated") {
+        if (mileStoneTX.logs[0].event = "milestoneCreatedForOath") {
             eventEmitted = true;
         }
 
@@ -115,9 +117,10 @@ contract("OathKeeper", function (accounts) {
 
     it("should emit confirmations complete event", async () => {
         let eventEmitted = false
-        const tx = await oathKeeperInstance.addItem(name, price, { from: alice })
+        const tx = await oathKeeperInstance.createOath(deadline, alice, owner, alice, body, { from: owner })
+        const mileStoneTX = await oathKeeperInstance.addMilestoneToOath(oathId, milestoneBody, confirmations, milestoneDeadline, { from: owner })
 
-        if (tx.logs[0].event = "oathCreated") {
+        if (mileStoneTX.logs[0].event = "milestoneCreatedForOath") {
             eventEmitted = true;
         }
 
@@ -126,9 +129,10 @@ contract("OathKeeper", function (accounts) {
 
     it("should emit recipient credited event", async () => {
         let eventEmitted = false
-        const tx = await oathKeeperInstance.addItem(name, price, { from: alice })
+        const tx = await oathKeeperInstance.createOath(deadline, alice, owner, alice, body, { from: owner })
+        const mileStoneTX = await oathKeeperInstance.addMilestoneToOath(oathId, milestoneBody, confirmations, milestoneDeadline, { from: owner })
 
-        if (tx.logs[0].event = "oathCreated") {
+        if (mileStoneTX.logs[0].event = "milestoneCreatedForOath") {
             eventEmitted = true;
         }
 
