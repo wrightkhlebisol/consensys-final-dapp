@@ -7,6 +7,7 @@
     "build": "vue-cli-service build"
   },
   "dependencies": {
+    "@openzeppelin/contracts": "^3.3.0",
     "@truffle/hdwallet-provider": "^1.2.0",
     "register-service-worker": "^1.7.1",
     "vue": "^3.0.0",
