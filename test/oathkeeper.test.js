@@ -9,7 +9,8 @@ contract("OathKeeper", function (accounts) {
     const bob = accounts[2]
     const emptyAddress = '0x0000000000000000000000000000000000000000'
     const deadline = 10
-    const body = "Complete test"
+    const milestoneDeadline = 2
+    const body = "Complete tests and deploy"
 
     let oathKeeperInstance;
 
@@ -18,13 +19,19 @@ contract("OathKeeper", function (accounts) {
     })
 
     it("should create oath with the required fields", async () => {
-        const tx = await oathKeeperInstance.createOath()
+        const tx = await oathKeeperInstance.createOath(deadline, alice, owner, alice, body, { from: owner })
 
+        const result = await oathKeeperInstance.oaths.call(0);
+
+        assert.equal(result['oathGiver'], owner, 'the oath giver should be the transaction sneder')
+        assert.equal(result['oathTaker'], alic, 'the oath taker should be the selected user address')
+        assert.equal(result['defaultsRecipient'], owner, 'oath creator should be assigned recipient for defaults')
+        assert.equal(result['completionRecipient'], alice, 'oath taker should be assigned as the recipient for completions')
     })
 
     it("should emit oath created event", async () => {
         let eventEmitted = false
-        const tx = await instance.addItem(name, price, { from: alice })
+        const tx = await oathKeeperInstance.createOath(deadline, alice, owner, alice, body, { from: owner })
 
         if (tx.logs[0].event = "oathCreated") {
             eventEmitted = true;
@@ -34,12 +41,15 @@ contract("OathKeeper", function (accounts) {
     })
 
     it("should add milestone to oath", async () => {
-        const tx = await oathKeeperInstance.addMilestoneToOath()
+        const tx = await oathKeeperInstance.createOath(deadline, alice, owner, alice, body, { from: owner })
+        const mileStoneTX = await oathKeeperInstance.addMilestoneToOath(0, 'Create test suites', 2, 2)
+
+        const result = await 
     })
 
     it("should emit milestone created for oath event", async () => {
         let eventEmitted = false
-        const tx = await instance.addItem(name, price, { from: alice })
+        const tx = await oathKeeperInstance.addItem(name, price, { from: alice })
 
         if (tx.logs[0].event = "oathCreated") {
             eventEmitted = true;
