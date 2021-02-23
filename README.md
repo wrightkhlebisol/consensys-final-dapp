@@ -113,3 +113,9 @@ This should start a development server at localhost:8081 or 8080 if that is avai
 ```
 
 ```
+
+---
+## **📹📹 PROJECT WALKTHROUGH VIDEO 📹📹**
+---
+
+<iframe width="1537" height="702" src="https://www.youtube.com/embed/zLzF6F2pnGs" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
