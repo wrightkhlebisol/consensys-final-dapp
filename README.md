@@ -50,27 +50,11 @@ Oath-keepers too are assured of a refund if a milestone isn't reached or when ti
 
 `1. Clone the repo`
 
-```
-
-```
-
 `2. cd into the project directory`
-
-```
-
-```
 
 `3. Execute the following script`
 
-```
-
-```
-
 `4. npm install`
-
-```
-
-```
 
 `5. npm run serve`
 
@@ -86,27 +70,11 @@ This should start a development server at localhost:8081 or 8080 if that is avai
 
 `1. Connect your metamask account to the dapp`
 
-```
-
-```
-
 `2. Click on create oath`
-
-```
-
-```
 
 `3. Complete the form and submit`
 
-```
-
-```
-
 `4. Wait for the transaction confirmation notification from metamask`
-
-```
-
-```
 
 `5. Reload the Dapp`
 
